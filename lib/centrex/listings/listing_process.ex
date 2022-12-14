@@ -10,6 +10,7 @@ defmodule Centrex.Listings.ListingProcess do
     )
   end
 
+  @spec read(String.t()) :: Listing.t() | {:error, atom()}
   def read(address) do
     address
     |> ListingRegistry.lookup_property()

@@ -4,7 +4,14 @@ defmodule Centrex do
   use Application
 
   def start(_type, _args) do
-    children = [Centrex.ListingRegistry.child_spec(), Centrex.ListingSupervisor, Centrex.Repo]
+    # TODO: Maybe move DiscordConsumer into its own supervisor
+    children = [
+      Centrex.ListingRegistry.child_spec(),
+      Centrex.ListingSupervisor,
+      Centrex.Repo,
+      Centrex.DiscordConsumer
+    ]
+
     opts = [strategy: :one_for_one, name: Centrex.Supervisor]
     Supervisor.start_link(children, opts)
   end
