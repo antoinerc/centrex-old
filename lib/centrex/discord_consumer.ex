@@ -71,6 +71,7 @@ defmodule Centrex.DiscordConsumer do
     response =
       case ListingProcess.read(address) do
         %Centrex.Listings.Listing{
+          address: address,
           price_history: [current_price | past_price],
           links_history: [link | _]
         } ->

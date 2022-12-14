@@ -1,6 +1,7 @@
 defmodule Centrex.Listings.ListingProcess do
   use GenServer, restart: :transient
 
+  alias Centrex.Listings
   alias Centrex.Listings.Listing
   alias Centrex.ListingRegistry
 
@@ -13,6 +14,7 @@ defmodule Centrex.Listings.ListingProcess do
   @spec read(String.t()) :: Listing.t() | {:error, atom()}
   def read(address) do
     address
+    |> Listings.format_address()
     |> ListingRegistry.lookup_property()
     |> case do
       {:ok, pid} -> GenServer.call(pid, :read)
