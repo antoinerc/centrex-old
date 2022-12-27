@@ -7,6 +7,6 @@ config :centrex, Centrex.Repo,
   hostname: "localhost"
 
 config :nostrum,
-  token: "MTA1MTMxMjA2OTU1Njg1MDgwOQ.GBdzk4.GPJZpVUnXZDImSVt0OhqVcsS9ayQaDTMI8DgK4"
+  token: System.get_env("CENTREX_SECRET")
 
 config :centrex, ecto_repos: [Centrex.Repo]

@@ -44,22 +44,18 @@ defmodule Centrex.DiscordConsumer do
     } = data
 
     response =
-      case ListingProcess.read(address) do
-        %Centrex.Listings.Listing{
-          price_history: [current_price | past_price],
-          links_history: [link | _]
-        } ->
+      case ListingProcess.track(address, type, price, link) do
+        {:ok,
+         %Listings.Listing{price_history: [current_price | past_price], links_history: [link | _]}} ->
+          "**NEW LISTING**\n**#{address}**\nPrice history: **#{current_price}$**#{Enum.map(past_price, &", #{&1}$")} \nLatest link: #{link}\n"
+
+        {:no_change,
+         %Listings.Listing{price_history: [current_price | past_price], links_history: [link | _]}} ->
           "Found an existing listing for\n**#{address}**\nPrice history: **#{current_price}$**#{Enum.map(past_price, &", #{&1}$")} \nLatest link: #{link}\n"
 
-        _ ->
-          Listings.create_listing(%Centrex.Listings.Listing{}, %{
-            address: address,
-            type: type,
-            links_history: [link],
-            price_history: [price]
-          })
-
-          "listing tracked"
+        {:updated,
+         %Listings.Listing{price_history: [current_price | past_price], links_history: [link | _]}} ->
+          "**UPDATED LISTING**\n**#{address}**\nPrice history: **#{current_price}$**#{Enum.map(past_price, &", #{&1}$")} \nLatest link: #{link}\n"
       end
 
     Api.create_interaction_response(interaction, %{type: 4, data: %{content: response}})

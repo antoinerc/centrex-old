@@ -11,10 +11,23 @@ defmodule Centrex.Listings.ListingProcess do
     )
   end
 
+  def track(address, type, price, link) do
+    with {:error, :not_found} <- ListingRegistry.lookup_property(address),
+         {:ok, listing} <- Listings.track_listing(address, price, link, type) do
+      Centrex.ListingSupervisor.add_listing_to_supervisor(listing)
+      {:ok, listing}
+    else
+      {:ok, pid} ->
+        GenServer.call(pid, {:update, price, link})
+
+      error ->
+        error
+    end
+  end
+
   @spec read(String.t()) :: Listing.t() | {:error, atom()}
   def read(address) do
     address
-    |> Listings.format_address()
     |> ListingRegistry.lookup_property()
     |> case do
       {:ok, pid} -> GenServer.call(pid, :read)
@@ -30,5 +43,19 @@ defmodule Centrex.Listings.ListingProcess do
   @impl true
   def handle_call(:read, _from, %Listing{} = state) do
     {:reply, state, state}
+  end
+
+  @impl true
+  def handle_call({:update, price, link}, _from, %Listing{} = state) do
+    case Listings.update_listing(state, price, link) do
+      {:ok, updated_listing} ->
+        {:reply, {:updated, updated_listing}, updated_listing}
+
+      {:error, :no_change} ->
+        {:reply, {:no_change, state}, state}
+
+      error ->
+        {:reply, error, state}
+    end
   end
 end
