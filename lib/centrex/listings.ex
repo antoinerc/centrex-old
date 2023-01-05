@@ -28,18 +28,30 @@ defmodule Centrex.Listings do
         price,
         link
       ) do
+    changes =
+      %{}
+      |> add_price(price_history, price)
+      |> add_link(links_history, link)
+
     listing
     |> Ecto.Changeset.cast(
-      %{
-        "price_history" => [price | price_history],
-        "links_history" => [link | links_history]
-      },
+      changes,
       [:price_history, :links_history]
     )
     |> Ecto.Changeset.validate_required([:price_history, :links_history, :address, :type])
     |> Ecto.Changeset.unique_constraint(:address, name: :listings_pkey)
     |> Repo.update()
   end
+
+  defp add_price(changes, [new_price | _], new_price), do: changes
+
+  defp add_price(changes, prices, new_price),
+    do: Map.put(changes, :price_history, [new_price | prices])
+
+  defp add_link(changes, [new_link | _], new_link), do: changes
+
+  defp add_link(changes, links, new_link),
+    do: Map.put(changes, :links_history, [new_link | links])
 
   def create_changeset(%Listing{} = listing, attrs \\ %{}) do
     listing
